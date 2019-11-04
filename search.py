@@ -70,36 +70,25 @@ def tinyMazeSearch(problem):
   return  [s,s,w,s,w,w,s,w]
 
 def depthFirstSearch(problem):
-  """
-  Search the deepest nodes in the search tree first [p 74].
-  
-  Your search algorithm needs to return a list of actions that reaches
-  the goal.  Make sure to implement a graph search algorithm [Fig. 3.18].
-  
-  To get started, you might want to try some of these simple commands to
-  understand the search problem that is being passed in:
+  return bdFirstSearch(problem,BDFS(util.Stack()))
   
 
-  """
-  dfs=DFS()
-  dfs.PushAndMarkExplored(Node(problem.getStartState(),None,None))
-  while (dfs.StackNotEmpty()):
-    current = dfs.Stack.pop()
+def breadthFirstSearch(problem):
+  return bdFirstSearch(problem,BDFS(util.Queue()))
+ 
+
+def bdFirstSearch(problem,searchAlg):
+  searchAlg.PushAndMarkExplored(Node(problem.getStartState(),None,None))
+  while (searchAlg.NotEmpty()):
+    current = searchAlg.Pop()
     if problem.isGoalState(current.getState()):
       return current.getActionsFromStart()
     else:
       successors = problem.getSuccessors(current.getState())
       for item in successors:
-              if dfs.NotVisited(item[0]):
-                dfs.PushAndMarkExplored(Node(item[0],current,item[1]))
-                 
-  
+              if searchAlg.NotVisited(item[0]):
+                searchAlg.PushAndMarkExplored(Node(item[0],current,item[1]))
 
-def breadthFirstSearch(problem):
-  "Search the shallowest nodes in the search tree first. [p 74]"
-  "*** YOUR CODE HERE ***"
-  util.raiseNotDefined()
-      
 def uniformCostSearch(problem):
   "Search the node of least total cost first. "
   "*** YOUR CODE HERE ***"
@@ -152,17 +141,25 @@ class Node:
         actionList.reverse()
         return actionList
 
-class DFS:
-   'DFS containg the entire data structure needed to perform deep first search'
-   Stack = util.Stack()
+
+
+class BDFS:
+   'BDFS containg the entire data structure needed to perform best/deep  first search'
+   def  __init__(self,dataStructure):
+     self.ds=dataStructure
+   ds=None
    Visited = set()
 
-   def StackNotEmpty(self):
-     return not self.Stack.isEmpty()
+   def NotEmpty(self):
+     return not self.ds.isEmpty()
     
    def PushAndMarkExplored(self,item):
-     self.Stack.push(item)
+     self.ds.push(item)
      self.Visited.add(item.getState())
 
    def NotVisited(self,item):
-     return not item in self.Visited
+     return not item in self.Visited    
+  
+   def Pop(self):
+     return self.ds.pop()
+
