@@ -15,6 +15,7 @@ import util
 
 
 
+
 class SearchProblem:
   """
   This class outlines the structure of a search problem, but doesn't implement
@@ -22,7 +23,8 @@ class SearchProblem:
   
   You do not need to change anything in this class, ever.
   """
-  
+
+
   def getStartState(self):
      """
      Returns the start state for the search problem 
@@ -70,29 +72,32 @@ def tinyMazeSearch(problem):
   return  [s,s,w,s,w,w,s,w]
 
 def depthFirstSearch(problem):
-  return bdFirstSearch(problem,BDFS(util.Stack()))
+  return bdFirstSearch(problem,BDFS(dfs))
   
 
 def breadthFirstSearch(problem):
-  return bdFirstSearch(problem,BDFS(util.Queue()))
+  return bdFirstSearch(problem,BDFS(bfs))
  
 
-def bdFirstSearch(problem,searchAlg):
-  searchAlg.PushAndMarkExplored(Node(problem.getStartState(),None,None))
-  while (searchAlg.NotEmpty()):
-    current = searchAlg.Pop()
-    if problem.isGoalState(current.getState()):
-      return current.getActionsFromStart()
-    else:
-      successors = problem.getSuccessors(current.getState())
-      for item in successors:
-              if searchAlg.NotVisited(item[0]):
-                searchAlg.PushAndMarkExplored(Node(item[0],current,item[1]))
+
+
+
+
+DISTANCE_FROM_GOAL="distanceFromGoal"
+
+def calculateH(problem,state,method):
+  if (method==DISTANCE_FROM_GOAL):
+   goalX=problem.goal[0]
+   goalY=problem.goal[1]
+   currX=state.state[0]
+   currY=state.state[1]
+   return abs(goalX-currX)+abs(goalY-currY)
+
 
 def uniformCostSearch(problem):
-  "Search the node of least total cost first. "
-  "*** YOUR CODE HERE ***"
-  util.raiseNotDefined()
+  return bdFirstSearch(problem,BDFS(ucs))
+
+ 
 
 def nullHeuristic(state, problem=None):
   """
@@ -106,6 +111,18 @@ def aStarSearch(problem, heuristic=nullHeuristic):
   "*** YOUR CODE HERE ***"
   util.raiseNotDefined()
     
+def bdFirstSearch(problem,searchAlg):
+  searchAlg.PushAndMarkExplored(Node(problem.getStartState(),None,None),None)
+  while (searchAlg.NotEmpty()):
+    current = searchAlg.Pop()
+    if problem.isGoalState(current.getState()):
+      return current.getActionsFromStart()
+    else:
+      successors = problem.getSuccessors(current.getState())
+      for item in successors:
+              position, direction, stepPrice = item
+              if searchAlg.NotVisited(position):
+                searchAlg.PushAndMarkExplored(Node(position,current,direction),stepPrice)
   
 # Abbreviations
 bfs = breadthFirstSearch
@@ -139,27 +156,43 @@ class Node:
             actionList.append(currNode.getAction())
             currNode = currNode.parent
         actionList.reverse()
+        print len(actionList)
         return actionList
-
 
 
 class BDFS:
    'BDFS containg the entire data structure needed to perform best/deep  first search'
-   def  __init__(self,dataStructure):
-     self.ds=dataStructure
+   def  __init__(self,dsName):
+     self.dsName=dsName
+     if (self.dsName==dfs):
+       self.ds=util.Stack()
+     elif (self.dsName==bfs):
+       self.ds=util.Queue()
+     elif (self.dsName==ucs):
+       self.ds=util.PriorityQueue()
+
+       
    ds=None
+   dsName=None
    Visited = set()
 
    def NotEmpty(self):
      return not self.ds.isEmpty()
     
-   def PushAndMarkExplored(self,item):
-     self.ds.push(item)
+   def PushAndMarkExplored(self,item,priority):
+     if (self.dsName==dfs or self.dsName==bfs):
+      self.ds.push(item)
+     else:
+       self.ds.push(item,priority)
+
      self.Visited.add(item.getState())
 
    def NotVisited(self,item):
      return not item in self.Visited    
   
+   def GetSearchType(self):
+     return self.dsName
+
    def Pop(self):
      return self.ds.pop()
 
