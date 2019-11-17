@@ -61,6 +61,13 @@ class SearchProblem:
      util.raiseNotDefined()
            
 
+def nullHeuristic(state, problem=None):
+  """
+  A heuristic function estimates the cost from the current state to the nearest
+  goal in the provided SearchProblem.  This heuristic is trivial.
+  """
+  return 0
+
 def tinyMazeSearch(problem):
   """
   Returns a sequence of moves that solves tinyMaze.  For any other
@@ -72,15 +79,20 @@ def tinyMazeSearch(problem):
   return  [s,s,w,s,w,w,s,w]
 
 def depthFirstSearch(problem):
-  return bdFirstSearch(problem,BDFS(dfs))
+  return bdFirstSearch(problem,BDFS(dfs,None,None))
   
 
 def breadthFirstSearch(problem):
-  return bdFirstSearch(problem,BDFS(bfs))
+  return bdFirstSearch(problem,BDFS(bfs,None,None))
  
 
+def uniformCostSearch(problem):
+  return bdFirstSearch(problem,BDFS(ucs,None,None))
 
-
+ 
+def aStarSearch(problem, heuristic=nullHeuristic):
+  return bdFirstSearch(problem,BDFS(astar, heuristic,problem))
+    
 
 
 DISTANCE_FROM_GOAL="distanceFromGoal"
@@ -94,25 +106,11 @@ def calculateH(problem,state,method):
    return abs(goalX-currX)+abs(goalY-currY)
 
 
-def uniformCostSearch(problem):
-  return bdFirstSearch(problem,BDFS(ucs))
 
- 
-
-def nullHeuristic(state, problem=None):
-  """
-  A heuristic function estimates the cost from the current state to the nearest
-  goal in the provided SearchProblem.  This heuristic is trivial.
-  """
-  return 0
-
-def aStarSearch(problem, heuristic=nullHeuristic):
-  "Search the node that has the lowest combined cost and heuristic first."
-  "*** YOUR CODE HERE ***"
-  util.raiseNotDefined()
-    
 def bdFirstSearch(problem,searchAlg):
-  searchAlg.PushAndMarkExplored(Node(problem.getStartState(),None,None),None)
+  startState=problem.getStartState()
+  searchAlg.SetCurrent(startState)
+  searchAlg.PushAndMarkExplored(Node(startState,None,None),None)
   while (searchAlg.NotEmpty()):
     current = searchAlg.Pop()
     if problem.isGoalState(current.getState()):
@@ -162,37 +160,52 @@ class Node:
 
 class BDFS:
    'BDFS containg the entire data structure needed to perform best/deep  first search'
-   def  __init__(self,dsName):
+   def  __init__(self,dsName,heuristic,problem):
      self.dsName=dsName
+     self.problem=problem
      if (self.dsName==dfs):
-       self.ds=util.Stack()
+       self.frontier=util.Stack()
      elif (self.dsName==bfs):
-       self.ds=util.Queue()
+       self.frontier=util.Queue()
      elif (self.dsName==ucs):
-       self.ds=util.PriorityQueue()
+       self.frontier=util.PriorityQueue()
+     elif (self.dsName==astar):
+       self.frontier=util.PriorityQueueWithFunction(heuristic(lambda : self.current, self.problem))
 
        
-   ds=None
+   frontier=None
    dsName=None
-   Visited = set()
+   explored = set()
+   current = None
+   problem=None
 
    def NotEmpty(self):
-     return not self.ds.isEmpty()
+     return not self.frontier.isEmpty()
     
-   def PushAndMarkExplored(self,item,priority):
+   def PushAndMarkExplored(self,item,priority,problem):
      if (self.dsName==dfs or self.dsName==bfs):
-      self.ds.push(item)
+       self.frontier.push(item)
+     elif self.dsName==astar:
+       self.frontier.push([item,priority,problem])
      else:
-       self.ds.push(item,priority)
+       self.frontier.push(item,priority)
 
-     self.Visited.add(item.getState())
+     self.explored.add(item.getState())
 
    def NotVisited(self,item):
-     return not item in self.Visited    
+     return not item in self.explored    
   
+   def SetCurrent(self,item):
+     self.current=item
+
+   def GetCurrent(self):
+     return self.current
+
    def GetSearchType(self):
      return self.dsName
 
    def Pop(self):
-     return self.ds.pop()
+     state = self.frontier.pop()
+     self.SetCurrent(state)
+     return state
 
