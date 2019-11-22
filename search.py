@@ -110,7 +110,7 @@ def calculateH(problem,state,method):
 def bdFirstSearch(problem,searchAlg):
   startState=problem.getStartState()
   searchAlg.SetCurrent(startState)
-  searchAlg.PushAndMarkExplored(Node(startState,None,None),None)
+  searchAlg.PushAndMarkExplored(Node(startState,None,None),None,problem)
   while (searchAlg.NotEmpty()):
     current = searchAlg.Pop()
     if problem.isGoalState(current.getState()):
@@ -120,7 +120,7 @@ def bdFirstSearch(problem,searchAlg):
       for item in successors:
               position, direction, stepPrice = item
               if searchAlg.NotVisited(position):
-                searchAlg.PushAndMarkExplored(Node(position,current,direction),stepPrice)
+                searchAlg.PushAndMarkExplored(Node(position,current,direction),stepPrice,problem)
   
 # Abbreviations
 bfs = breadthFirstSearch
@@ -162,6 +162,7 @@ class BDFS:
    'BDFS containg the entire data structure needed to perform best/deep  first search'
    def  __init__(self,dsName,heuristic,problem):
      self.dsName=dsName
+     self.heuristic=heuristic
      self.problem=problem
      if (self.dsName==dfs):
        self.frontier=util.Stack()
@@ -170,14 +171,17 @@ class BDFS:
      elif (self.dsName==ucs):
        self.frontier=util.PriorityQueue()
      elif (self.dsName==astar):
-       self.frontier=util.PriorityQueueWithFunction(heuristic(lambda : self.current, self.problem))
+       self.frontier=util.PriorityQueueWithFunction(lambda func:heuristic(self.GetCurrent(),self.problem))
 
-       
+   heuristic=None
    frontier=None
    dsName=None
    explored = set()
    current = None
    problem=None
+
+   def GetHeuristicVars(self):
+     return self.GetCurrent(),self.problem
 
    def NotEmpty(self):
      return not self.frontier.isEmpty()
@@ -186,7 +190,7 @@ class BDFS:
      if (self.dsName==dfs or self.dsName==bfs):
        self.frontier.push(item)
      elif self.dsName==astar:
-       self.frontier.push([item,priority,problem])
+       self.frontier.push(item)
      else:
        self.frontier.push(item,priority)
 
@@ -199,6 +203,10 @@ class BDFS:
      self.current=item
 
    def GetCurrent(self):
+     if self.current==None:
+       self.current= self.problem.getStartState()
+     if hasattr(self.current,"state"):
+       return self.current.state
      return self.current
 
    def GetSearchType(self):
