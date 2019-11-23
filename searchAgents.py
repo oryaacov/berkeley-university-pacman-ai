@@ -119,7 +119,7 @@ class SearchAgent(Agent):
     if 'actionIndex' not in dir(self): self.actionIndex = 0
     i = self.actionIndex
     self.actionIndex += 1
-    if i < len(self.actions):
+    if  i < len(self.actions):
       return self.actions[i]    
     else:
       return Directions.STOP
@@ -256,13 +256,42 @@ def euclideanHeuristic(position, problem, info={}):
 # This portion is incomplete.  Time to write code!  #
 #####################################################
 
+
+class MultiGoalsState():
+  remainingGoals = set()
+  def __init__(self, position,remainingGoals):
+    self.currentPostion = position
+    self.remainingGoals = remainingGoals.copy()
+  
+  def markGoal(self,visited):
+    print(self.remainingGoals)
+    self.remainingGoals.remove(visited)
+    print(self.remainingGoals)
+    
+  def getPosition(self):
+    return self.currentPostion
+
+  def getRemainingGoals(self):
+    return self.remainingGoals
+
+  def __hash__(self):
+    hashVal = hash(str(self.currentPostion) + str(self.remainingGoals))
+    return hashVal
+  
+  def __eq__(self, other):
+    if self.currentPostion == other.getPosition():
+      return len(set(self.remainingGoals)) == len(set(other.remainingGoals))
+    return False
+
+
 class CornersProblem(search.SearchProblem):
   """
   This search problem finds paths through all four corners of a layout.
 
   You must select a suitable state space and successor function
   """
-  
+  state=None
+   
   def __init__(self, startingGameState):
     """
     Stores the walls, pacman's starting position and corners.
@@ -270,23 +299,20 @@ class CornersProblem(search.SearchProblem):
     self.walls = startingGameState.getWalls()
     self.startingPosition = startingGameState.getPacmanPosition()
     top, right = self.walls.height-2, self.walls.width-2 
-    self.corners = ((1,1), (1,top), (right, 1), (right, top))
+    self.corners = {(1,1), (1,top), (right, 1), (right, top)}
     for corner in self.corners:
       if not startingGameState.hasFood(*corner):
         print 'Warning: no food in corner ' + str(corner)
     self._expanded = 0 # Number of search nodes expanded
-    
-    "*** YOUR CODE HERE ***"
+    self.state=MultiGoalsState(self.startingPosition,self.corners)   
+    if self.startingPosition in self.corners:
+      self.state.markGoal(self.startingPosition)
     
   def getStartState(self):
-    "Returns the start state (in your state space, not the full Pacman state space)"
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    return self.state
     
   def isGoalState(self, state):
-    "Returns whether this search state is a goal state of the problem"
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    return len(state.getRemainingGoals())==0
        
   def getSuccessors(self, state):
     """
@@ -300,19 +326,39 @@ class CornersProblem(search.SearchProblem):
      cost of expanding to that successor
     """
     
+    # successors = []
+    # for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
+    #   x,y= self.state.getPosition()
+    #   dx, dy = Actions.directionToVector(action)
+    #   nextx, nexty = int(x + dx), int(y + dy)
+    #   if not self.walls[nextx][nexty]:
+    #     nextState = MultiGoalsState((nextx, nexty),state.getRemainingGoals())
+    #     if (nextx, nexty) in nextState.getRemainingGoals():
+    #       nextState.markGoal((nextx, nexty))
+    #     cost = 1
+    #     successors.append( (nextState, action, cost) )   
+    # self._expanded += 1
+    # print successors
+    # return successors      
     successors = []
     for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
       # Add a successor state to the successor list if the action is legal
       # Here's a code snippet for figuring out whether a new position hits a wall:
-      #   x,y = currentPosition
-      #   dx, dy = Actions.directionToVector(action)
-      #   nextx, nexty = int(x + dx), int(y + dy)
-      #   hitsWall = self.walls[nextx][nexty]
-      
-      "*** YOUR CODE HERE ***"
+      x,y= state.getPosition()
+      dx, dy = Actions.directionToVector(action)
+      nextx, nexty = int(x + dx), int(y + dy)
+      if not self.walls[nextx][nexty]:
+        nextState = MultiGoalsState((nextx, nexty),state.getRemainingGoals())
+        if (nextx, nexty) in nextState.getRemainingGoals():
+          nextState.markGoal((nextx, nexty))
+
+        cost = 1
+        successors.append( (nextState, action, cost) )
       
     self._expanded += 1
     return successors
+
+  
 
   def getCostOfActions(self, actions):
     """
@@ -353,6 +399,8 @@ class AStarCornersAgent(SearchAgent):
   def __init__(self):
     self.searchFunction = lambda prob: search.aStarSearch(prob, cornersHeuristic)
     self.searchType = CornersProblem
+
+
 
 class FoodSearchProblem:
   """

@@ -109,14 +109,14 @@ def calculateH(problem,state,method):
 
 def bdFirstSearch(problem,searchAlg):
   startState=problem.getStartState()
-  searchAlg.SetCurrent(startState)
+  searchAlg.SetCurrent(Node(startState,None,None))
   searchAlg.PushAndMarkExplored(Node(startState,None,None),None,problem)
   while (searchAlg.NotEmpty()):
     current = searchAlg.Pop()
     if problem.isGoalState(current.getState()):
       return current.getActionsFromStart()
     else:
-      successors = problem.getSuccessors(current.getState())
+      successors = problem.getSuccessors(current.state)
       for item in successors:
               position, direction, stepPrice = item
               if searchAlg.NotVisited(position):
@@ -179,6 +179,7 @@ class BDFS:
    explored = set()
    current = None
    problem=None
+   position=None
 
    def GetHeuristicVars(self):
      return self.GetCurrent(),self.problem
@@ -202,12 +203,18 @@ class BDFS:
    def SetCurrent(self,item):
      self.current=item
 
+   def SetPosition(self,item):
+     self.position=item
+
    def GetCurrent(self):
      if self.current==None:
        self.current= self.problem.getStartState()
-     if hasattr(self.current,"state"):
-       return self.current.state
      return self.current
+
+
+   def GetPosition(self):
+     return self.position
+
 
    def GetSearchType(self):
      return self.dsName
