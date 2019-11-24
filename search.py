@@ -109,18 +109,18 @@ def calculateH(problem,state,method):
 
 def bdFirstSearch(problem,searchAlg):
   startState=problem.getStartState()
-  searchAlg.SetCurrent(Node(startState,None,None))
-  searchAlg.PushAndMarkExplored(Node(startState,None,None),None,problem)
+  searchAlg.SetCurrent(Node(startState,None,None,0))
+  searchAlg.PushAndMarkExplored(searchAlg.GetCurrent(),None)
   while (searchAlg.NotEmpty()):
     current = searchAlg.Pop()
     if problem.isGoalState(current.getState()):
       return current.getActionsFromStart()
     else:
       successors = problem.getSuccessors(current.state)
-      for item in successors:
-              position, direction, stepPrice = item
+      for successor in successors:
+              position, direction, cost = successor
               if searchAlg.NotVisited(position):
-                searchAlg.PushAndMarkExplored(Node(position,current,direction),stepPrice,problem)
+                searchAlg.PushAndMarkExplored(Node(position,current,direction,cost),cost)
   
 # Abbreviations
 bfs = breadthFirstSearch
@@ -129,14 +129,20 @@ astar = aStarSearch
 ucs = uniformCostSearch
 
 class Node:
-  def __init__(self, state, parent, action):
+  def __init__(self, state, parent, action,cost):
         self.state  = state
         self.parent = parent
         self.action = action
-        
+        self.cost = cost
+        if self.parent!=None: 
+          self.totalCost = self.cost + self.parent.totalCost
+        else:
+          self.totalCost=0
+
   def __str__(self):
         return "State: " + str(self.state) + "\n" + \
                "Parent: " + str(self.parent.state) + "\n" + \
+               "Cost: " + str(self.cost)+ "\n" + \
                "Action: " + str(self.action) + "\n" 
 
   def getState(self):
@@ -144,6 +150,9 @@ class Node:
 
   def getParent(self):
         return self.parent
+
+  def getCost(self):
+        return self.cost
 
   def getAction(self):
         return self.action
@@ -171,7 +180,7 @@ class BDFS:
      elif (self.dsName==ucs):
        self.frontier=util.PriorityQueue()
      elif (self.dsName==astar):
-       self.frontier=util.PriorityQueueWithFunction(lambda func:heuristic(self.GetCurrent(),self.problem))
+       self.frontier=util.PriorityQueueWithFunction(lambda func:heuristic(self.GetCurrent().state,self.problem)+self.GetCurrent().totalCost)
 
    heuristic=None
    frontier=None
@@ -179,19 +188,16 @@ class BDFS:
    explored = set()
    current = None
    problem=None
-   position=None
 
-   def GetHeuristicVars(self):
-     return self.GetCurrent(),self.problem
 
    def NotEmpty(self):
      return not self.frontier.isEmpty()
     
-   def PushAndMarkExplored(self,item,priority,problem):
+   def PushAndMarkExplored(self,item,priority):
      if (self.dsName==dfs or self.dsName==bfs):
        self.frontier.push(item)
      elif self.dsName==astar:
-       self.frontier.push(item)
+        self.frontier.push(item)
      else:
        self.frontier.push(item,priority)
 
@@ -210,10 +216,6 @@ class BDFS:
      if self.current==None:
        self.current= self.problem.getStartState()
      return self.current
-
-
-   def GetPosition(self):
-     return self.position
 
 
    def GetSearchType(self):

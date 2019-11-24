@@ -264,9 +264,7 @@ class MultiGoalsState():
     self.remainingGoals = remainingGoals.copy()
   
   def markGoal(self,visited):
-    print(self.remainingGoals)
     self.remainingGoals.remove(visited)
-    print(self.remainingGoals)
     
   def getPosition(self):
     return self.currentPostion
