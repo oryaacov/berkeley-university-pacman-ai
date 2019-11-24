@@ -137,7 +137,7 @@ class Node:
         if self.parent!=None: 
           self.totalCost = self.cost + self.parent.totalCost
         else:
-          self.totalCost=0
+          self.totalCost=cost
 
   def __str__(self):
         return "State: " + str(self.state) + "\n" + \

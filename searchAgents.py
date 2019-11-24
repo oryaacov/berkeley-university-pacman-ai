@@ -372,6 +372,36 @@ class CornersProblem(search.SearchProblem):
     return len(actions)
 
 
+ 
+def numOfWallsBlockOnTheWay(walls,current,goal):
+  #since the walls are calculated as vartical and horizontal blocks
+  #the minimum number of step to pass a block and keep going vartical/horizontal will be 2
+  MIN_NUMBER_OF_STEPS_TO_PASS_BLOCK=2 
+  verticalCounter=horizontalCounter=0
+  currentX,currentY=current
+  goalX,goalY=goal
+  blockStarted=False
+  while goalX!=currentX:
+    currentX+=1 if goalX>currentX else -1
+    if walls.data[currentX][current[1]]:
+      if not blockStarted:
+        horizontalCounter+=1
+        blockStarted=True
+    else:
+        blockStarted=False
+  blockStarted=False
+  while goalY!=currentY:
+    currentY+=1 if goalY>currentY else -1
+    if walls.data[current[0]][currentY]:
+     if not blockStarted:
+      verticalCounter+=1 
+      blockStarted=True
+     else:
+       blockStarted=False
+  return (verticalCounter*MIN_NUMBER_OF_STEPS_TO_PASS_BLOCK),(horizontalCounter*MIN_NUMBER_OF_STEPS_TO_PASS_BLOCK)
+
+    
+
 def cornersHeuristic(state, problem):
   """
   A heuristic for the CornersProblem that you defined.
@@ -386,11 +416,21 @@ def cornersHeuristic(state, problem):
   it should be admissible.  (You need not worry about consistency for
   this heuristic to receive full credit.)
   """
-  corners = problem.corners # These are the corner coordinates
+  #corners = problem.corners # These are the corner coordinates
   walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
-  
-  "*** YOUR CODE HERE ***"
-  return 0 # Default to trivial solution
+  sortedGoals=[]
+  goals = state.getRemainingGoals()
+  currentPosition = state.getPosition()
+  for goal in goals:
+   sortedGoals.append({util.manhattanDistance(currentPosition,goal):goal})
+  sortedGoals.sort()
+  closestGoal=sortedGoals.pop().values()[0]
+  v,h=numOfWallsBlockOnTheWay(walls,currentPosition,closestGoal)
+  if len(sortedGoals)==0:
+    return v+h
+  return util.manhattanDistance(currentPosition,closestGoal)+v+h
+
+# //  return 0 # Default to trivial solution
 
 class AStarCornersAgent(SearchAgent):
   "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
