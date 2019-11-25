@@ -376,7 +376,7 @@ class CornersProblem(search.SearchProblem):
 def numOfWallsBlockOnTheWay(walls,current,goal):
   #since the walls are calculated as vartical and horizontal blocks
   #the minimum number of step to pass a block and keep going vartical/horizontal will be 2
-  MIN_NUMBER_OF_STEPS_TO_PASS_BLOCK=2 
+  MIN_NUMBER_OF_STEPS_TO_PASS_BLOCK=1 
   verticalCounter=horizontalCounter=0
   currentX,currentY=current
   goalX,goalY=goal
@@ -400,6 +400,14 @@ def numOfWallsBlockOnTheWay(walls,current,goal):
        blockStarted=False
   return (verticalCounter*MIN_NUMBER_OF_STEPS_TO_PASS_BLOCK),(horizontalCounter*MIN_NUMBER_OF_STEPS_TO_PASS_BLOCK)
 
+def sortGoals(currentPosition,goals):
+  sortedGoals=[]
+  for goal in goals:
+   if hasattr(goal,"values"):
+    goal=goal.values()[0]
+   sortedGoals.append({util.manhattanDistance(currentPosition,goal):goal})
+  sortedGoals.sort()
+  return sortedGoals
     
 
 def cornersHeuristic(state, problem):
@@ -418,17 +426,15 @@ def cornersHeuristic(state, problem):
   """
   #corners = problem.corners # These are the corner coordinates
   walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
-  sortedGoals=[]
   goals = state.getRemainingGoals()
   currentPosition = state.getPosition()
-  for goal in goals:
-   sortedGoals.append({util.manhattanDistance(currentPosition,goal):goal})
-  sortedGoals.sort()
-  closestGoal=sortedGoals.pop().values()[0]
-  v,h=numOfWallsBlockOnTheWay(walls,currentPosition,closestGoal)
-  if len(sortedGoals)==0:
-    return v+h
-  return util.manhattanDistance(currentPosition,closestGoal)+v+h
+  result=0
+  while len(goals)>0:
+    goals=sortGoals(currentPosition,goals)
+    temp=goals.pop(0).values()[0]
+    result+=util.manhattanDistance(currentPosition,temp)
+    currentPosition=temp
+  return result
 
 # //  return 0 # Default to trivial solution
 
