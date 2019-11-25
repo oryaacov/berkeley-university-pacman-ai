@@ -409,6 +409,14 @@ def sortGoals(currentPosition,goals):
   sortedGoals.sort()
   return sortedGoals
     
+def closestGoalHeuristic(currentPosition,goals):
+  result=0
+  while len(goals)>0:
+    goals=sortGoals(currentPosition,goals)
+    temp=goals.pop(0).values()[0]
+    result+=util.manhattanDistance(currentPosition,temp)
+    currentPosition=temp
+  return result
 
 def cornersHeuristic(state, problem):
   """
@@ -428,13 +436,7 @@ def cornersHeuristic(state, problem):
   walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
   goals = state.getRemainingGoals()
   currentPosition = state.getPosition()
-  result=0
-  while len(goals)>0:
-    goals=sortGoals(currentPosition,goals)
-    temp=goals.pop(0).values()[0]
-    result+=util.manhattanDistance(currentPosition,temp)
-    currentPosition=temp
-  return result
+  return closestGoalHeuristic(currentPosition,goals)
 
 # //  return 0 # Default to trivial solution
 
@@ -529,7 +531,12 @@ def foodHeuristic(state, problem):
   """
   position, foodGrid = state
   "*** YOUR CODE HERE ***"
-  return 0
+  goals = set()
+  for i in range(len(foodGrid.data)):
+    for j in range (len(foodGrid.data[i])):
+      if foodGrid.data[i][j]:
+        goals.add((i,j))
+  return closestGoalHeuristic(position,goals)
   
 class ClosestDotSearchAgent(SearchAgent):
   "Search for all food using a sequence of searches"
